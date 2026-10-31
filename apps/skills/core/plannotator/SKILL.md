@@ -86,10 +86,11 @@ Targets:
 - Plain-text config and data files, rendered as text: `.yaml`, `.yml`, `.json`, `.jsonc`, `.json5`, `.toml`, `.ini`, `.cfg`, `.conf`, `.properties`, `.csv`, `.tsv`, `.log`, `.xml`, `.env.example`. `.env` itself is deliberately refused (it commonly holds secrets, and annotate history copies file contents). Source-code files belong to `plannotator review`, not annotate.
 - Diagram sources, opened in the full diagram viewer (zoom, pan, popout, click a node/edge/cluster to comment): `.mmd`, `.mermaid` (Mermaid) and `.dot`, `.gv` (Graphviz). The file is the whole diagram — no fence needed — and comments carry the part's id plus its real file line.
 - AsciiDoc files: `.adoc`, `.asciidoc`.
+- Emacs Org files: `.org`, parsed with Orga and rendered read-only as structured Org. Org content is never executed, and annotations retain exact positions and excerpts from the original source.
 - HTML files (`.html`, `.htm`): rendered as the raw page by default; `--markdown` converts to markdown instead. `--render-html` is accepted for compatibility; raw rendering is already the default.
 - URLs (`https://...`): fetched and converted via Jina Reader by default; `--no-jina` uses plain fetch plus Turndown instead.
 - Running local apps: a loopback `http://localhost:PORT/` URL whose probe returns HTML opens in live-app mode (annotate the real running page). `--app` forces live mode and fails loudly when it cannot apply; `--static` forces the classic conversion pipeline. Non-loopback URLs always use the conversion pipeline.
-- Folders: `plannotator annotate docs/` opens a file browser over the folder's supported files.
+- Folders: `plannotator annotate docs/` opens a file browser over the folder's supported files, including `.org` documents.
 - Several files: `plannotator annotate spec.md mock.html notes.md` opens them as one review, in the order given, with one decision. Every argument must be an existing file named by its path (no prose, URLs or folders among them). With the `plannotator` tool, pass the list as `target`.
 
 Single files are capped at 2MB. Files are read from disk at stable project paths; keep the reviewed source where it lives.

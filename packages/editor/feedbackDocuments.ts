@@ -22,16 +22,18 @@ import {
   type MessageAnnotationEntry,
 } from '@plannotator/ui/utils/parser';
 import { parseAsciidocToBlocks } from '@plannotator/ui/utils/asciidocParser';
+import { parseOrgToBlocks } from '@plannotator/ui/utils/org';
 import { documentRenderKindForPath, isDiagramRenderKind, shouldStripFrontmatter } from '@plannotator/shared/annotatable';
 
 /**
  * Blocks for a document body rendered as `renderAs`: a diagram source
  * (.mmd/.dot) is ONE diagram block over its raw text, AsciiDoc goes through
- * the AsciiDoc parser, everything else is the markdown parse.
+ * the AsciiDoc parser, Org through Orga, everything else is the markdown parse.
  */
 export const blocksForRenderAs = (text: string, renderAs: DocumentRenderAs | undefined, frontmatter: boolean): Block[] => {
   if (isDiagramRenderKind(renderAs)) return diagramDocumentBlocks(text, renderAs);
   if (renderAs === 'asciidoc') return parseAsciidocToBlocks(text);
+  if (renderAs === 'org') return parseOrgToBlocks(text);
   return parseMarkdownToBlocks(text, { frontmatter });
 };
 

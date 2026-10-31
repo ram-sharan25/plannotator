@@ -12,11 +12,13 @@ beforeAll(() => {
   mkdirSync(join(root, "notes"), { recursive: true });
   mkdirSync(join(root, "empty"), { recursive: true });
   writeFileSync(join(root, "plan.md"), "# Plan body");
+  writeFileSync(join(root, "requirements.org"), "* DRAFT Requirements :review:\n");
   writeFileSync(join(root, "docs/page.html"), "<p>hi</p>");
   writeFileSync(join(root, "docs/dup.md"), "# A");
   writeFileSync(join(root, "notes/dup.md"), "# B");
   writeFileSync(join(root, "script.py"), "print()");
   writeFileSync(join(root, "big.md"), "x".repeat(2 * 1024 * 1024 + 1));
+  writeFileSync(join(root, "big.org"), "x".repeat(2 * 1024 * 1024 + 1));
   mkdirSync(join(root, "notebooks"), { recursive: true });
   writeFileSync(join(root, "notebooks/tour.livemd"), "# Livebook tour");
 });
@@ -48,6 +50,16 @@ describe("resolveAnnotateTarget", () => {
       expect(result.markdown).toBe("# Plan body");
       expect(result.annotateMode).toBe("annotate");
       expect(result.isUrl).toBe(false);
+    }
+  });
+
+  test("resolves and reads an Org file through the native document path", async () => {
+    const result = await resolve("requirements.org");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.absolutePath).toBe(join(root, "requirements.org"));
+      expect(result.markdown).toBe("* DRAFT Requirements :review:\n");
+      expect(result.sourceConverted).toBe(false);
     }
   });
 
@@ -143,6 +155,10 @@ describe("resolveAnnotateTarget", () => {
       expect(oversized.notFound).toBe(false);
       expect(oversized.message).toContain("File too large to annotate (max 2MB)");
     }
+
+    const oversizedOrg = await resolve("big.org");
+    expect(oversizedOrg.ok).toBe(false);
+    if (!oversizedOrg.ok) expect(oversizedOrg.message).toContain("File too large to annotate (max 2MB)");
 
     const emptyFolder = await resolve("empty");
     expect(emptyFolder.ok).toBe(false);

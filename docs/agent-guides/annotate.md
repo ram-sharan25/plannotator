@@ -1,13 +1,16 @@
 ## Annotate Flow
 
 ```
-User runs /plannotator-annotate <file.md | file.html | https://... | folder/>
+User runs /plannotator-annotate <file.md | file.org | file.html | https://... | folder/>
         ↓
 Claude Code: plannotator annotate subcommand runs
 OpenCode/Pi: event handler intercepts command
         ↓
 Input type detected:
   .md/.mdx/.txt → file read from disk
+  .org          → original source parsed in-browser with Orga (renderAs "org") and
+                  rendered read-only; annotation anchors retain exact original
+                  positions/excerpts
   plain-text config/data formats (.yaml .yml .json .jsonc .json5 .toml .ini .cfg .conf .properties .csv .tsv .log .xml .env.example)
              → read from disk, rendered as plain text exactly like .txt (.env itself is
                deliberately excluded — it commonly holds secrets and annotate history

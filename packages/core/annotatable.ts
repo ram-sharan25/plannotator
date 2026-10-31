@@ -12,6 +12,7 @@
  *   .conf .properties .csv .tsv .log .xml .env.example
  * - Diagram sources: .mmd .mermaid (Mermaid) and .dot .gv (Graphviz)
  * - AsciiDoc: .adoc .asciidoc
+ * - Emacs Org: .org
  *
  * Diagram sources are a THIRD FAMILY, not markdown: they are plain UTF-8 text
  * (so they resolve, size-cap and version-history exactly like a `.txt`), but
@@ -31,6 +32,11 @@
  * (`packages/ui/utils/asciidocParser.ts`) instead of the markdown one.
  * `documentRenderKindForPath` covers both families. AsciiDoc has no
  * frontmatter, so `shouldStripFrontmatter` returns false for it.
+ *
+ * Emacs Org is a FIFTH FAMILY, wired the same way: `renderAs: "org"`, and the
+ * editor parses it with Orga (`packages/ui/utils/org.ts`), keeping each
+ * block's exact source range so feedback can quote the original Org text.
+ * Org has no YAML frontmatter, so `shouldStripFrontmatter` returns false.
  *
  * Deliberate exclusions:
  * - `.env` — commonly holds secrets, and annotate's per-file version history
@@ -60,11 +66,11 @@
 
 /** Built-in plain-text extension pattern (no leading anchor, no trailing `$`). */
 const BUILTIN_TEXT_PATTERN =
-	String.raw`(?:\.(?:mdx?|txt|adoc|asciidoc|mmd|mermaid|dot|gv|ya?ml|jsonc?|json5|toml|ini|cfg|conf|properties|csv|tsv|log|xml)|\.env\.example)`;
+	String.raw`(?:\.(?:mdx?|txt|adoc|asciidoc|org|mmd|mermaid|dot|gv|ya?ml|jsonc?|json5|toml|ini|cfg|conf|properties|csv|tsv|log|xml)|\.env\.example)`;
 
 /** Built-in plain-text + raw-HTML extension pattern. */
 const BUILTIN_DOC_PATTERN =
-	String.raw`(?:\.(?:mdx?|txt|adoc|asciidoc|mmd|mermaid|dot|gv|html?|ya?ml|jsonc?|json5|toml|ini|cfg|conf|properties|csv|tsv|log|xml)|\.env\.example)`;
+	String.raw`(?:\.(?:mdx?|txt|adoc|asciidoc|org|mmd|mermaid|dot|gv|html?|ya?ml|jsonc?|json5|toml|ini|cfg|conf|properties|csv|tsv|log|xml)|\.env\.example)`;
 
 /** Which diagram engine a diagram-source extension belongs to. */
 export type DiagramRenderKind = "mermaid" | "graphviz";
@@ -111,24 +117,26 @@ export function annotateDiagramRenderKind(options: {
 }
 
 /** A text source that does not render through the markdown parser. */
-export type DocumentRenderKind = DiagramRenderKind | "asciidoc";
+export type DocumentRenderKind = DiagramRenderKind | "asciidoc" | "org";
 
 const ASCIIDOC_FILE_RE = /\.(?:adoc|asciidoc)$/i;
+const ORG_FILE_RE = /\.org$/i;
 
 /**
  * The renderer `input` needs instead of the markdown parser, or null for
- * markdown. Diagram engines first, then AsciiDoc. The `renderAs` value both
+ * markdown. Diagram engines first, then AsciiDoc, then Org. The `renderAs` value both
  * annotate servers put on /api/plan and /api/doc for a text source.
  */
 export function documentRenderKindForPath(input: string): DocumentRenderKind | null {
 	const diagram = diagramRenderKindForPath(input);
 	if (diagram !== null) return diagram;
-	return ASCIIDOC_FILE_RE.test(input.trim()) ? "asciidoc" : null;
+	if (ASCIIDOC_FILE_RE.test(input.trim())) return "asciidoc";
+	return ORG_FILE_RE.test(input.trim()) ? "org" : null;
 }
 
 /** True when `value` is a diagram kind or `"asciidoc"`. */
 export function isDocumentRenderKind(value: unknown): value is DocumentRenderKind {
-	return isDiagramRenderKind(value) || value === "asciidoc";
+	return isDiagramRenderKind(value) || value === "asciidoc" || value === "org";
 }
 
 /**
@@ -280,7 +288,7 @@ export function isExtraMarkdownPath(input: string, extra: readonly string[] = []
  * keep in sync with the patterns above.
  */
 export const ANNOTATABLE_EXTENSIONS_HINT =
-	".md, .mdx, .txt, .adoc, .asciidoc, .html, .htm, .mmd, .mermaid, .dot, .gv, .yaml, .yml, .json, .jsonc, .json5, .toml, .ini, .cfg, .conf, .properties, .csv, .tsv, .log, .xml, .env.example";
+	".md, .mdx, .txt, .adoc, .asciidoc, .org, .html, .htm, .mmd, .mermaid, .dot, .gv, .yaml, .yml, .json, .jsonc, .json5, .toml, .ini, .cfg, .conf, .properties, .csv, .tsv, .log, .xml, .env.example";
 
 /** The accepted-set hint with any configured extra extensions appended. */
 export function buildAnnotatableExtensionsHint(extra: readonly string[] = []): string {

@@ -33,7 +33,7 @@ describe("CLI top-level help", () => {
     // Deliberate literal: the review usage line is API surface for agents
     // probing --help (and for the knowledge-skill freshness guard).
     expect(output).toContain("plannotator review [--git | --gitbutler] [--base <ref>] [--diff-type <type>] [--patch-file <path | ->] [--tailscale] [--gate] [DIRECTORY | PR_URL]");
-    expect(output).toContain("plannotator annotate <file.md | file.txt | file.html | https://... | folder/>");
+    expect(output).toContain("plannotator annotate <file.md | file.org | file.txt | file.html | https://... | folder/>");
     expect(output).toContain("[--markdown] [--no-jina]");
     expect(output).toContain("plannotator annotate-last [--stdin]");
     expect(output).toContain("plannotator copilot-last [--gate] [--json] [--hook]");

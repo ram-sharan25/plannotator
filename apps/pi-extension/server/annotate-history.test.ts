@@ -16,7 +16,8 @@
  */
 
 import { afterAll, afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { startAnnotateServer } from "./serverAnnotate.ts";
@@ -254,6 +255,24 @@ describe("pi annotate server: folder annotate history", () => {
 			};
 			expect(json.previousPlan).toBeNull();
 			expect(json.versionInfo).toEqual({ version: 1, totalVersions: 1, project });
+		} finally {
+			server.stop();
+		}
+	});
+
+	test("folder /api/doc serves original Org source natively without modifying it", async () => {
+		const folderPath = mkdtempSync(join(tmpdir(), "plannotator-pi-folder-org-"));
+		const docPath = join(folderPath, "requirements.org");
+		const source = "* TODO Requirements :review:\n";
+		writeFileSync(docPath, source, "utf-8");
+		const before = createHash("sha256").update(readFileSync(docPath)).digest("hex");
+		const server = await startAnnotateServer({ markdown: "", filePath: folderPath, folderPath, mode: "annotate-folder", htmlContent: "<html></html>" });
+		try {
+			const response = await fetch(`${server.url}/api/doc?path=${encodeURIComponent(docPath)}&doc=1`);
+			const json = (await response.json()) as { markdown?: string; renderAs?: string };
+			expect(json.markdown).toBe(source);
+			expect(json.renderAs).toBe("org");
+			expect(createHash("sha256").update(readFileSync(docPath)).digest("hex")).toBe(before);
 		} finally {
 			server.stop();
 		}

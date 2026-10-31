@@ -1,0 +1,40 @@
+#+title: Requirements
+#+TODO: DRAFT REVIEW | FINAL
+
+* DRAFT Authentication :security:review:
+  :PROPERTIES:
+  :ID: auth-001
+  :OWNER: Platform
+  :END:
+  DEADLINE: <2026-09-15 Tue>
+
+Review [[https://example.com/policy][the security policy]].
+
+** Requirements
+- [ ] Define timeout behavior
+  - Include retry limits
+
+** Validation
+#+begin_src emacs-lisp :results none
+(message "This block must never be executed")
+#+end_src
+
+| Area    | State  |
+|---------+--------|
+| Login   | REVIEW |
+
+#+begin_quote
+Read-only review.
+#+end_quote
+
+Markdown-style compatibility fence remains visible:
+```text
+not native Org
+```
+
+** REVIEW [#A] Additional cases :quality:
+- Retry policy :: Three attempts
+
+Inline *bold*, /italic/, =verbatim=, ~code~, LaTeX $x^2$, and footnote [fn:retry].
+
+[fn:retry] Retry details.

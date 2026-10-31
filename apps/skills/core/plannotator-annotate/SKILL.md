@@ -1,12 +1,12 @@
 ---
 name: plannotator-annotate
-description: Open Plannotator's annotation UI for a markdown file, plain-text config file (.yaml, .json, .toml, .ini, .csv, .log, …), HTML file, URL, or folder and then respond to the returned annotations.
+description: Open Plannotator's annotation UI for a Markdown or Emacs Org file, plain-text config file (.yaml, .json, .toml, .ini, .csv, .log, …), HTML file, URL, or folder and then respond to the returned annotations.
 disable-model-invocation: true
 ---
 
 # Plannotator Annotate
 
-Use this skill when the user wants to annotate a document in Plannotator instead of reviewing it inline in chat.
+Use this skill when the user wants to annotate a document in Plannotator instead of reviewing it inline in chat. `.org` files render as read-only Org documents; no Org code is executed, and returned annotations map to exact original Org source positions and excerpts.
 
 Run for ordinary annotation/feedback:
 

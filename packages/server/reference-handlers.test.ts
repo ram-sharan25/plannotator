@@ -258,6 +258,7 @@ describe("annotatable plain-text files (#1029)", () => {
 	test("file browser lists config formats but not source code or .env", async () => {
 		const root = makeTempDir("plannotator-files-annotatable-");
 		writeTempFile(root, "docs/plan.md", "# plan\n");
+		writeTempFile(root, "docs/requirements.org", "* Requirements\n");
 		writeTempFile(root, "config.yaml", "key: value\n");
 		writeTempFile(root, "settings.toml", "[table]\n");
 		writeTempFile(root, "data.csv", "a,b\n1,2\n");
@@ -276,8 +277,21 @@ describe("annotatable plain-text files (#1029)", () => {
 			"config.yaml",
 			"data.csv",
 			"docs/plan.md",
+			"docs/requirements.org",
 			"settings.toml",
 		]);
+	});
+
+	test("serves Org source with renderAs org", async () => {
+		const root = makeTempDir("plannotator-doc-org-");
+		writeTempFile(root, "requirements.org", "* TODO Requirements :review:\n");
+
+		const res = await getDoc("requirements.org", { rootPaths: [root] });
+		const data = await res.json() as { markdown?: string; renderAs?: string };
+
+		expect(res.status).toBe(200);
+		expect(data.markdown).toBe("* TODO Requirements :review:\n");
+		expect(data.renderAs).toBe("org");
 	});
 
 	test("doc=1 serves a .yaml file as an annotatable markdown document", async () => {
@@ -329,6 +343,15 @@ describe("annotatable document size cap", () => {
 
 		expect(res.status).toBe(413);
 		expect(data.error).toBe("File too large (max 2MB)");
+	});
+
+	test("Org fallback rejects an oversized .org with 413", async () => {
+		const root = makeTempDir("plannotator-org-cap-");
+		writeFileSync(join(root, "huge.org"), `* big\n${"x".repeat(2 * 1024 * 1024 + 1)}\n`);
+
+		const res = await getDoc("huge.org", { rootPaths: [root] });
+		expect(res.status).toBe(413);
+		expect((await res.json() as { error?: string }).error).toBe("File too large (max 2MB)");
 	});
 
 	test("markdown fallback rejects an oversized .md with 413", async () => {

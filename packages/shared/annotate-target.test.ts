@@ -25,6 +25,7 @@ beforeAll(() => {
   writeFileSync(join(root, "docs/spec.md"), "# Spec");
   writeFileSync(join(root, "docs/page.html"), "<p>hi</p>");
   writeFileSync(join(root, "notes/deep/nested.md"), "# Nested");
+  writeFileSync(join(root, "notes/deep/requirements.org"), "* Requirements");
   // Same basename twice for the ambiguous case.
   writeFileSync(join(root, "docs/dup.md"), "# A");
   writeFileSync(join(root, "notes/dup.md"), "# B");
@@ -78,6 +79,7 @@ describe("probeAnnotateToken", () => {
   test("resolves documents, including fuzzy basename matches", () => {
     expect(probe("plan.md")).toBe(join(root, "plan.md"));
     expect(probe("nested.md")).toBe(join(root, "notes/deep/nested.md"));
+    expect(probe("requirements.org")).toBe(join(root, "notes/deep/requirements.org"));
     expect(probe("@plan.md")).toBe(join(root, "plan.md"));
   });
 

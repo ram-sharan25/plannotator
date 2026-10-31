@@ -429,11 +429,13 @@ describe("annotatable plain-text files (#1029)", () => {
 	test("predicates classify text vs doc vs unsupported paths", () => {
 		expect(isAnnotatableTextPath("notes.yaml")).toBe(true);
 		expect(isAnnotatableTextPath("notes.txt")).toBe(true);
+		expect(isAnnotatableTextPath("requirements.org")).toBe(true);
 		expect(isAnnotatableTextPath("page.html")).toBe(false);
 		expect(isAnnotatableTextPath("app.ts")).toBe(false);
 		expect(isAnnotatableTextPath(".env")).toBe(false);
 		expect(isAnnotatableDocPath("page.html")).toBe(true);
 		expect(isAnnotatableDocPath("config.json5")).toBe(true);
+		expect(isAnnotatableDocPath("requirements.ORG")).toBe(true);
 		expect(isAnnotatableDocPath("binary.png")).toBe(false);
 	});
 });

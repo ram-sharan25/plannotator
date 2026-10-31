@@ -1,6 +1,6 @@
 ---
 title: "Annotate"
-description: "The /plannotator-annotate slash command for annotating markdown files, HTML files, URLs, and folders."
+description: "The /plannotator-annotate slash command for annotating Markdown, Emacs Org, and HTML files, URLs, and folders."
 sidebar:
   order: 12
 section: "Commands"
@@ -13,6 +13,7 @@ The `/plannotator-annotate` command opens files, URLs, or folders in the Plannot
 | Input | Command | What happens |
 |-------|---------|--------------|
 | Markdown file | `plannotator annotate README.md` | Opens the file directly |
+| Emacs Org file | `plannotator annotate requirements.org` | Renders a structured, read-only Org document with source-mapped annotations |
 | Plain-text file | `plannotator annotate config.yaml` | Opens the file directly, rendered as plain text |
 | Diagram file | `plannotator annotate flow.mmd` | Renders the whole file as one diagram in the diagram viewer |
 | AsciiDoc file | `plannotator annotate docs/guide.adoc` | Renders the AsciiDoc document |
@@ -23,7 +24,9 @@ The `/plannotator-annotate` command opens files, URLs, or folders in the Plannot
 
 ### Supported file types
 
-Beyond `.md`, `.mdx`, `.txt`, `.html`, and `.htm`, annotate accepts common plain-text config and data formats: `.yaml`, `.yml`, `.json`, `.jsonc`, `.json5`, `.toml`, `.ini`, `.cfg`, `.conf`, `.properties`, `.csv`, `.tsv`, `.log`, `.xml`, and `.env.example`. These render exactly like `.txt` — as plain text you can select and annotate.
+Org files (`.org`) are parsed with Orga and rendered as readable Org documents, including headings, TODO states and tags, lists, drawers, planning timestamps, source blocks, links, and tables. This is a read-only review renderer, not Emacs: Plannotator does not execute Babel, macros, includes, file-local code, or other active content. Every Org annotation maps back to exact positions and an exact excerpt in the original `.org` source.
+
+Beyond `.md`, `.mdx`, `.org`, `.txt`, `.html`, and `.htm`, annotate accepts common plain-text config and data formats: `.yaml`, `.yml`, `.json`, `.jsonc`, `.json5`, `.toml`, `.ini`, `.cfg`, `.conf`, `.properties`, `.csv`, `.tsv`, `.log`, `.xml`, and `.env.example`. These render exactly like `.txt` — as plain text you can select and annotate.
 
 ### AsciiDoc files
 
@@ -46,6 +49,7 @@ Each comment records the part's own id and its real line in the file, so the exp
 
 ```
 /plannotator-annotate path/to/file.md
+/plannotator-annotate path/to/requirements.org
 /plannotator-annotate https://docs.stripe.com/api
 /plannotator-annotate ./specs/
 ```
@@ -58,6 +62,7 @@ You do not have to pass a bare path. Extra words around a path are fine (`/plann
 
 ```bash
 plannotator annotate path/to/file.md
+plannotator annotate path/to/requirements.org
 plannotator annotate index.html
 plannotator annotate https://example.com/docs
 plannotator annotate ./docs/
@@ -67,7 +72,7 @@ Starts a local server, opens the browser, and blocks until you submit. Formatted
 
 ## Folders
 
-When you pass a folder, Plannotator opens a file browser showing all markdown and HTML files in the directory tree. Click any file to open it in the annotation UI. This is useful for annotating a set of specs, documentation, or your Obsidian vault.
+When you pass a folder, Plannotator opens a file browser showing all supported documents—including Markdown, Org, plain-text data/config, and HTML files—in the directory tree. Click any file to open it in the annotation UI. This is useful for annotating a set of specs, documentation, or your Obsidian vault.
 
 Build output directories like `_site/`, `public/`, `.docusaurus/`, and `node_modules/` are automatically excluded from the file browser.
 

@@ -131,6 +131,7 @@ Prefer it standalone? [Plannotator TUI](https://github.com/plannotator/plannotat
 
 ```
 /plannotator-annotate README.md                  # Local markdown file
+/plannotator-annotate requirements.org            # Read-only Org rendering with exact source-mapped annotations
 /plannotator-annotate src/                       # Browse and annotate files in a folder
 /plannotator-annotate https://docs.rs/…          # Fetch and annotate any URL
 /plannotator-annotate report.html --render-html  # Render HTML as-is instead of converting
@@ -138,6 +139,8 @@ Prefer it standalone? [Plannotator TUI](https://github.com/plannotator/plannotat
 ```
 
 Need a realistic document to try? Copy the [product requirements document template and filled example](https://docs.plannotator.ai/templates/product-requirements-document) as Markdown.
+
+`.org` files are parsed with Orga and rendered read-only for review—not executed as Emacs Org mode. Annotations retain exact positions and excerpts from the original Org source.
 
 ### Code review
 
@@ -364,7 +367,7 @@ The fastest way to see what Plannotator does is to invoke it yourself, right now
 ```
 /plannotator-last                   # annotate the agent's last reply
 /plannotator-review                 # review your current diff, PR-style
-/plannotator-annotate report.html   # annotate any file, folder, or URL
+/plannotator-annotate requirements.org # annotate Markdown, Org, HTML, folders, or URLs
 ```
 
 (Slash commands in most agents; `$plannotator-*` skills in Codex, command palette in Amp.)

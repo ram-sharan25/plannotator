@@ -882,6 +882,39 @@ export const elementContextExportBlock = (ann: any, opts: ElementContextExportOp
  *  labeled with the semantic hover label plus a short excerpt so the agent
  *  reading the feedback sees every referenced element. Emits nothing for
  *  single-target annotations, keeping their output byte-identical. */
+type ExportableOrgAnchor = {
+  filePath: string;
+  start: { line: number; column: number; offset?: number };
+  end: { line: number; column: number; offset?: number };
+  excerpt: string;
+  renderedText: string;
+};
+
+const exportableOrgAnchor = (value: unknown): ExportableOrgAnchor | null => {
+  if (!value || typeof value !== 'object') return null;
+  const anchor = value as Record<string, any>;
+  if (
+    typeof anchor.filePath !== 'string' || anchor.filePath.length === 0 || anchor.filePath.length > 8192 ||
+    typeof anchor.excerpt !== 'string' || anchor.excerpt.length > 2 * 1024 * 1024 ||
+    typeof anchor.renderedText !== 'string' || anchor.renderedText.length > 2 * 1024 * 1024
+  ) return null;
+  if (!anchor.start || !anchor.end) return null;
+  for (const point of [anchor.start, anchor.end]) {
+    if (!Number.isInteger(point.line) || point.line < 1 || !Number.isInteger(point.column) || point.column < 1) return null;
+    if (point.offset !== undefined && (!Number.isInteger(point.offset) || point.offset < 0)) return null;
+  }
+  if (anchor.end.line < anchor.start.line || (anchor.end.line === anchor.start.line && anchor.end.column < anchor.start.column)) return null;
+  if (anchor.start.offset !== undefined && anchor.end.offset !== undefined) {
+    if (anchor.end.offset < anchor.start.offset || anchor.end.offset - anchor.start.offset !== anchor.excerpt.length) return null;
+  }
+  return anchor as ExportableOrgAnchor;
+};
+
+const orgFence = (excerpt: string): string => {
+  const longest = Math.max(0, ...Array.from(excerpt.matchAll(/`+/g), match => match[0].length));
+  return '`'.repeat(Math.max(3, longest + 1));
+};
+
 const additionalTargetsExportBlock = (ann: any): string => {
   const targets = ann?.htmlAdditionalTargets;
   if (!Array.isArray(targets) || targets.length === 0) return '';
@@ -1290,6 +1323,7 @@ const renderAnnotationEntries = (
 
   let lastEmittedPage: string | null = null;
   emitOrder.forEach((ann) => {
+    const orgAnchor = exportableOrgAnchor(ann.orgAnchor);
     if (hasPageGroups && ann.pageUrl && ann.pageUrl !== lastEmittedPage) {
       output += `${hashes(opts.level)} Page: ${ann.pageUrl}\n\n`;
       lastEmittedPage = ann.pageUrl;
@@ -1299,7 +1333,7 @@ const renderAnnotationEntries = (
     // Add diff context label if annotation was created in diff view
     if (ann.diffContext) {
       output += `[In diff content] `;
-    } else {
+    } else if (!orgAnchor) {
       const lineLabel = blocks ? lineLabelForAnnotation(blocks, ann) : null;
       if (lineLabel) output += `(${lineLabel}) `;
     }
@@ -1329,6 +1363,16 @@ const renderAnnotationEntries = (
         output += `General feedback about the ${subject}\n`;
         output += `> ${ann.text}\n`;
         break;
+    }
+
+    if (orgAnchor && ann.type !== 'GLOBAL_COMMENT') {
+      const anchor = orgAnchor;
+      const location = anchor.start.line === anchor.end.line
+        ? `line ${anchor.start.line}, columns ${anchor.start.column}–${anchor.end.column}`
+        : `lines ${anchor.start.line}:${anchor.start.column}–${anchor.end.line}:${anchor.end.column}`;
+      const fence = orgFence(anchor.excerpt);
+      output += `\nOrg source: ${anchor.filePath}, ${location}\n\n`;
+      output += `${fence}org\n${anchor.excerpt}\n${fence}\n`;
     }
 
     // Raw-HTML / live-app pinpoints describe their element for the agent

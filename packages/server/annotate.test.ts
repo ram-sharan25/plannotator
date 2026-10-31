@@ -1144,6 +1144,24 @@ describe("annotate server: folder annotate history", () => {
     }
   });
 
+  test("folder /api/doc serves original Org source natively without modifying it", async () => {
+    const folderPath = mkdtempSync(join(tmpdir(), "plannotator-folder-org-"));
+    const docPath = join(folderPath, "requirements.org");
+    const source = "* TODO Requirements :review:\n";
+    writeFileSync(docPath, source, "utf-8");
+    const before = createHash("sha256").update(readFileSync(docPath)).digest("hex");
+    const server = await startAnnotateServer({ markdown: "", filePath: folderPath, folderPath, mode: "annotate-folder", htmlContent: MINIMAL_HTML });
+    try {
+      const response = await fetch(`${server.url}/api/doc?path=${encodeURIComponent(docPath)}&doc=1`);
+      const json = await response.json() as { markdown?: string; renderAs?: string };
+      expect(json.markdown).toBe(source);
+      expect(json.renderAs).toBe("org");
+      expect(createHash("sha256").update(readFileSync(docPath)).digest("hex")).toBe(before);
+    } finally {
+      server.stop();
+    }
+  });
+
   test("cross-mode continuity for config formats: a .yaml with single-file history diffs when opened via its folder", async () => {
     const folderPath = mkdtempSync(join(tmpdir(), "plannotator-folder-history-yaml-"));
     const docPath = join(folderPath, "config.yaml");

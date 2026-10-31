@@ -14,6 +14,8 @@ export type { DiagramRenderKind, DocumentRenderKind } from '@plannotator/core/an
  * .dot/.gv) that render as ONE diagram through the same engine a ```mermaid
  * fence uses — see diagramDocumentBlocks in utils/parser. `asciidoc` is an
  * .adoc source parsed by utils/asciidocParser into the same block model.
+ * `org` is an Emacs Org source parsed by utils/org (Orga), with each block
+ * keeping its Orga node for the native Org renderer.
  */
 export type DocumentRenderAs = 'markdown' | 'html' | DocumentRenderKind;
 
@@ -67,6 +69,16 @@ export type ArtifactAnnotationAnchor =
   | { kind: 'page' };
 
 /** Context shared by description and comment annotations created on a PR artifact. */
+/** Exact original Emacs Org source range behind a rendered selection. */
+export interface OrgSourceAnchor {
+  filePath: string;
+  start: { line: number; column: number; offset?: number };
+  end: { line: number; column: number; offset?: number };
+  excerpt: string;
+  /** Rendered selection retained alongside the source excerpt. */
+  renderedText: string;
+}
+
 export interface ArtifactAnnotationMeta {
   artifactId: string;
   artifactName: string;
@@ -107,6 +119,7 @@ export interface Annotation {
   diagramAnchor?: DiagramAnchor; // a comment on a rendered diagram part (Mermaid / Graphviz fence): the part's own id, label and document source line; the highlighter skips it and the diagram overlay restores it (see @plannotator/core/diagram-anchor)
   imageRegion?: ImageRegion; // a comment on part of an image in a markdown document (#2100): the image's src as written, its document line, and the box in the image's own pixels; drawn by the image viewer, skipped by the highlighter, exported as `Image:` / `Region:` lines (see @plannotator/core/image-region)
   questionAnswer?: QuestionAnswer; // the reviewer's answer to a `:::question` block (id `ann-question-<key>`): the Viewer draws the answer from it, the highlighter skips it, and the export prints it in the "Answers to your questions" section instead of as a numbered comment (see @plannotator/core/question-block)
+  orgAnchor?: OrgSourceAnchor; // native Org review anchor: the exact source range and excerpt behind the selection. Additive; absent on Markdown/HTML annotations.
   // web-highlighter metadata for cross-element selections
   startMeta?: AnnotationTextMeta;
   endMeta?: AnnotationTextMeta;
@@ -202,7 +215,7 @@ export type AlertKind = 'note' | 'tip' | 'warning' | 'caution' | 'important';
 
 export interface Block {
   id: string;
-  type: 'paragraph' | 'heading' | 'blockquote' | 'list-item' | 'code' | 'hr' | 'table' | 'html' | 'directive' | 'math';
+  type: 'paragraph' | 'heading' | 'blockquote' | 'list-item' | 'code' | 'hr' | 'table' | 'html' | 'directive' | 'math' | 'org';
   content: string; // Plain text, or raw (unsanitized) HTML for type === 'html'
   level?: number; // For headings (1-6) or list indentation
   language?: string; // For code blocks (e.g., 'rust', 'typescript')
@@ -224,6 +237,8 @@ export interface Block {
    * `(lines a–b)` label.
    */
   diagramSourceLineOffset?: number;
+  /** Orga AST node retained in browser memory for the native Org renderer. */
+  orgNode?: unknown;
 }
 
 export interface DiffResult {

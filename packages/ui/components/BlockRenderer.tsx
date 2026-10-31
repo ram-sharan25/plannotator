@@ -9,6 +9,7 @@ import { AlertBlock } from "./blocks/AlertBlock";
 import { BlockquoteBlock } from "./blocks/BlockquoteBlock";
 import { TableBlock } from "./blocks/TableBlock";
 import { MathBlock } from "./blocks/MathBlock";
+import { OrgBlock } from "./OrgBlock";
 import { QuestionBlock, type QuestionBlockProps } from "./blocks/QuestionBlock";
 import {
   indexQuestionBlocks,
@@ -77,7 +78,12 @@ export const BlockRenderer: React.FC<{
   /** A picture tile's zoom, with its question and choice (see `QuestionBlock` `onZoomChoice`). */
   onQuestionPictureZoom?: QuestionBlockProps['onZoomChoice'];
 }> = ({ block, onOpenLinkedDoc, onOpenCodeFile, imageBaseDir, onImageClick, onToggleCheckbox, checkboxOverrides, orderedIndex, githubRepo, repoHost, headingAnchorId, onNavigateAnchor, question, questionTotal, questionAnswer, onAnswerQuestion, onSaveQuestionAnswer, saveQuestionAnswerLabel, renderQuestionFooter, questionDecisionRecording, questionDecisionScope, onToggleQuestionDecisionRecording, onOpenQuestionDecision, questionStatusTag, questionStatusLabel, renderQuestionBelowPrompt, questionContractLines = false, questionPictureChoices, questionPictureBadge, onQuestionPictureZoom }) => {
+  if (block.orgNode) return <OrgBlock block={block} onOpenLinkedDoc={onOpenLinkedDoc} />;
+
   switch (block.type) {
+    case 'org':
+      return <OrgBlock block={block} onOpenLinkedDoc={onOpenLinkedDoc} />;
+
     case 'heading': {
       const Tag = `h${block.level || 1}` as React.ElementType;
       const styles = {

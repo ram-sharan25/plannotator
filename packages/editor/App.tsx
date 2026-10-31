@@ -4013,8 +4013,9 @@ const App: React.FC = () => {
           // A bundle opens its first file once loaded (see the effect below).
           setMarkdown('');
         } else if (typeof data.plan === 'string') {
-          // An .adoc file renders through the AsciiDoc block parser.
-          if (data.renderAs === 'asciidoc') setRenderAs('asciidoc');
+          // An .adoc file renders through the AsciiDoc block parser, an .org
+          // file through Orga.
+          if (data.renderAs === 'asciidoc' || data.renderAs === 'org') setRenderAs(data.renderAs);
           // CM6 joins lines with \n; CRLF input would make an untouched
           // edit round-trip fabricate a whole-document diff. Normalize once.
           const normalizedPlan = data.plan.replace(/\r\n?/g, '\n');
@@ -7531,7 +7532,7 @@ const App: React.FC = () => {
           onAgentToolChange={agentTool.save}
           agentTerminalAvailable={showAgentTerminalControls}
           webmcpAvailable={webmcp.available}
-          documentTextSizeAvailable={renderAs === 'markdown' || renderAs === 'asciidoc'}
+          documentTextSizeAvailable={renderAs === 'markdown' || renderAs === 'asciidoc' || renderAs === 'org'}
           agentConnected={webmcpActivity.calls > 0}
           onCallbackFeedback={handleCallbackFeedback}
           onCallbackApprove={handleCallbackApprove}
@@ -8039,6 +8040,7 @@ const App: React.FC = () => {
                     onRestoreReport={handleRestoreReport}
                     blocks={blocks}
                     markdown={displayedMarkdown}
+                    orgSourcePath={renderAs === 'org' ? activeParseDocPath ?? null : null}
                     frontmatter={frontmatter}
                     annotations={viewerAnnotations}
                     onAddAnnotation={handleAddAnnotation}

@@ -10,6 +10,7 @@ import Highlighter from '@plannotator/web-highlighter';
 import type { Annotation, EditorMode, HostDraft, ImageAttachment } from '../types';
 import { metaWithBelowTitle, metaWithoutBelowTitle, snapRangeOutOfBelowTitle } from '../utils/belowTitleSlot';
 import { AnnotationType } from '../types';
+import { resolveOrgSourceAnchor } from '../utils/org';
 import type { QuickLabel } from '../utils/quickLabels';
 import {
   trimWhitespaceOnlyBoundaryNodes,
@@ -737,6 +738,8 @@ export interface UseAnnotationHighlighterOptions {
    * from this hook's state. Absent: unchanged.
    */
   onHostDraft?: (draft: HostDraft | null) => void;
+  /** Original source identity for native Org rendering. */
+  orgSource?: { source: string; filePath: string };
 }
 
 /** The outcome of one `applyAnnotations` pass. */
@@ -826,7 +829,10 @@ export function useAnnotationHighlighter({
   onRestoreMismatch,
   onRestoreReport,
   onHostDraft,
+  orgSource,
 }: UseAnnotationHighlighterOptions): UseAnnotationHighlighterReturn {
+  const orgSourceRef = useRef(orgSource);
+  orgSourceRef.current = orgSource;
   const highlighterRef = useRef<Highlighter | null>(null);
   const modeRef = useRef<EditorMode>(mode);
   const onAddAnnotationRef = useRef(onAddAnnotation);
@@ -1070,6 +1076,16 @@ export function useAnnotationHighlighter({
 
     const mathTargets = pendingMathTargetsRef.current;
 
+    const activeOrgSource = orgSourceRef.current;
+    const orgAnchor = activeOrgSource
+      ? resolveOrgSourceAnchor(
+          activeOrgSource.source,
+          activeOrgSource.filePath,
+          source.text,
+          (doms ?? []) as HTMLElement[],
+        )
+      : undefined;
+
     const newAnnotation: Annotation = {
       id: source.id,
       blockId,
@@ -1083,6 +1099,7 @@ export function useAnnotationHighlighter({
       startMeta: source.startMeta,
       endMeta: source.endMeta,
       images,
+      ...(orgAnchor ? { orgAnchor } : {}),
       // Host capability: present only when a mentionSource was supplied AND a
       // token survived, so an annotation created without one is unchanged.
       ...(mentions && mentions.length > 0 ? { mentions } : {}),

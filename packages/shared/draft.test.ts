@@ -32,6 +32,18 @@ describe("draft generation invalidation", () => {
     expect(loadDraft(KEY)).toEqual({ annotations: ["fresh"], draftGeneration: 3 });
   });
 
+  test("preserves additive Org source anchors without normalization", () => {
+    const orgAnchor = {
+      filePath: "/docs/requirements.org",
+      start: { line: 14, column: 3, offset: 220 },
+      end: { line: 14, column: 36, offset: 253 },
+      excerpt: "** TODO Define failure handling :review:",
+      renderedText: "Define failure handling",
+    };
+    expect(saveDraft(KEY, { annotations: [{ id: "org-1", orgAnchor }], draftGeneration: 1 })).toBe(true);
+    expect((loadDraft(KEY) as any).annotations[0].orgAnchor).toEqual(orgAnchor);
+  });
+
   test("keeps rejecting older delayed saves after a newer generated draft is accepted", () => {
     deleteDraft(KEY, 2);
 

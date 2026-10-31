@@ -111,7 +111,7 @@ export function useSharing(
   setShareHtml?: (h: string) => void,
   setRenderAs?: (m: DocumentRenderAs) => void,
   contentRevision = 0,
-  /** Render kind of the shared document; `asciidoc` travels as `r: 'asciidoc'`. */
+  /** Render kind of the shared document; `asciidoc` and `org` travel as `r`. */
   renderAs?: DocumentRenderAs,
 ): UseSharingResult {
   const [isSharedSession, setIsSharedSession] = useState(false);
@@ -181,7 +181,7 @@ export function useSharing(
             setMarkdown('');
           } else {
             setMarkdown(payload.p);
-            setRenderAs?.(payload.r === 'asciidoc' ? 'asciidoc' : 'markdown');
+            setRenderAs?.(payload.r === 'asciidoc' || payload.r === 'org' ? payload.r : 'markdown');
             setRawHtml?.('');
             setShareHtml?.('');
           }
@@ -229,7 +229,7 @@ export function useSharing(
           setMarkdown('');
         } else {
           setMarkdown(payload.p);
-          setRenderAs?.(payload.r === 'asciidoc' ? 'asciidoc' : 'markdown');
+          setRenderAs?.(payload.r === 'asciidoc' || payload.r === 'org' ? payload.r : 'markdown');
           setRawHtml?.('');
           setShareHtml?.('');
         }

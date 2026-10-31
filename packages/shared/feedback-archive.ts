@@ -181,6 +181,14 @@ export interface FeedbackAnnotationRecord {
   diffContext?: string;
   severity?: string;
   inReplyTo?: string;
+  /** Exact original Org source location behind a rendered selection. */
+  orgAnchor?: {
+    filePath: string;
+    start: { line: number; column: number; offset?: number };
+    end: { line: number; column: number; offset?: number };
+    excerpt: string;
+    renderedText: string;
+  };
   /** External tool identifier ("eslint", "browser-agent", a review job).
    *  Absent means the human wrote it — that is the "my own comments" filter. */
   source?: string;
@@ -306,6 +314,20 @@ function asNumber(value: unknown): number | undefined {
   return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
+function asBoundedString(value: unknown, maxLength: number, allowEmpty = false): string | undefined {
+  return typeof value === "string" && value.length <= maxLength && (allowEmpty || value.length > 0)
+    ? value
+    : undefined;
+}
+
+function asSourceCoordinate(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isInteger(value) && value >= 1 ? value : undefined;
+}
+
+function asSourceOffset(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0 ? value : undefined;
+}
+
 /**
  * Shallow-normalize one submitted annotation.
  *
@@ -352,6 +374,33 @@ function normalizeAnnotation(raw: unknown): FeedbackAnnotationRecord {
   if (severity) record.severity = severity;
   const inReplyTo = asString(a.inReplyTo);
   if (inReplyTo) record.inReplyTo = inReplyTo;
+  if (typeof a.orgAnchor === "object" && a.orgAnchor !== null) {
+    const anchor = a.orgAnchor as Record<string, unknown>;
+    const start = typeof anchor.start === "object" && anchor.start !== null ? anchor.start as Record<string, unknown> : null;
+    const end = typeof anchor.end === "object" && anchor.end !== null ? anchor.end as Record<string, unknown> : null;
+    const filePath = asBoundedString(anchor.filePath, 8192);
+    const excerpt = asBoundedString(anchor.excerpt, 2 * 1024 * 1024, true);
+    const renderedText = asBoundedString(anchor.renderedText, 2 * 1024 * 1024, true);
+    const startLine = start ? asSourceCoordinate(start.line) : undefined;
+    const startColumn = start ? asSourceCoordinate(start.column) : undefined;
+    const endLine = end ? asSourceCoordinate(end.line) : undefined;
+    const endColumn = end ? asSourceCoordinate(end.column) : undefined;
+    const startOffset = start ? asSourceOffset(start.offset) : undefined;
+    const endOffset = end ? asSourceOffset(end.offset) : undefined;
+    const orderedCoordinates = startLine !== undefined && startColumn !== undefined && endLine !== undefined && endColumn !== undefined
+      && (endLine > startLine || (endLine === startLine && endColumn >= startColumn));
+    const orderedOffsets = startOffset === undefined || endOffset === undefined
+      || (endOffset >= startOffset && endOffset - startOffset === excerpt?.length);
+    if (filePath && excerpt !== undefined && renderedText !== undefined && orderedCoordinates && orderedOffsets) {
+      record.orgAnchor = {
+        filePath,
+        start: { line: startLine, column: startColumn, ...(startOffset !== undefined ? { offset: startOffset } : {}) },
+        end: { line: endLine, column: endColumn, ...(endOffset !== undefined ? { offset: endOffset } : {}) },
+        excerpt,
+        renderedText,
+      };
+    }
+  }
   const source = asString(a.source);
   if (source) record.source = source;
   const author = asString(a.author);

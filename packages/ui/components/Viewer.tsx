@@ -142,6 +142,8 @@ export interface ViewerProps {
   mentionSource?: MentionSource;
   blocks: Block[];
   markdown: string;
+  /** Original path for native Org source anchoring; set when `markdown` is Org source. */
+  orgSourcePath?: string | null;
   frontmatter?: Frontmatter | null;
   annotations: Annotation[];
   onAddAnnotation: (ann: Annotation) => void;
@@ -862,6 +864,7 @@ export const Viewer = forwardRef<ViewerHandle, ViewerProps>(({
   onVimHudKeyPanelChange,
   onHostDraft,
   belowTitle,
+  orgSourcePath,
 }, ref) => {
   // Annotation authoring is off when read-only, and when the host only wants
   // answers (`answerOnly`); question cards and checkboxes follow `readOnly`.
@@ -1052,6 +1055,7 @@ export const Viewer = forwardRef<ViewerHandle, ViewerProps>(({
     onRestoreMismatch: handleRestoreMismatch,
     onRestoreReport,
     onHostDraft: hostComposes ? onHostDraft : undefined,
+    orgSource: orgSourcePath ? { source: markdown, filePath: orgSourcePath } : undefined,
   });
 
   // Refs for code block annotation path

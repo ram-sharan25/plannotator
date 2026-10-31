@@ -144,6 +144,45 @@ describe("feedback archive: record shape", () => {
     expect(record.annotations?.[0]?.scope).toBe("file");
   });
 
+  test("preserves exact Org source anchors in submitted-feedback history", () => {
+    const dataDir = useTempDataDir();
+    const orgAnchor = {
+      filePath: "/docs/requirements.org",
+      start: { line: 14, column: 3, offset: 220 },
+      end: { line: 14, column: 43, offset: 260 },
+      excerpt: "** TODO Define failure handling :review:",
+      renderedText: "Define failure handling",
+    };
+    appendFeedbackRecord({
+      project: PROJECT,
+      surface: "annotate",
+      decision: "feedback",
+      feedback: "Org source: requirements.org, line 14",
+      annotations: [{ id: "org-1", type: "COMMENT", originalText: "Define failure handling", orgAnchor }],
+    });
+    expect(readIndex(dataDir)[0].annotations?.[0].orgAnchor).toEqual(orgAnchor);
+  });
+
+  test("drops malformed or out-of-bounds Org source anchors", () => {
+    const dataDir = useTempDataDir();
+    appendFeedbackRecord({
+      project: PROJECT,
+      surface: "annotate",
+      decision: "feedback",
+      feedback: "malformed metadata",
+      annotations: [{
+        id: "bad-org",
+        orgAnchor: {
+          filePath: "/docs/requirements.org",
+          start: { line: -1, column: 3, offset: 220 },
+          end: { line: 1, column: 4, offset: 221 },
+          excerpt: "far longer than the claimed range",
+          renderedText: "bad",
+        },
+      }],
+    });
+    expect(readIndex(dataDir)[0].annotations?.[0].orgAnchor).toBeUndefined();
+  });
   test("provenance is preserved so `source == null` filters the reviewer's own comments", () => {
     // Regression: external/WebMCP/agent findings are archived (the submitted
     // text already embeds them) but must stay distinguishable, or "analyze my
